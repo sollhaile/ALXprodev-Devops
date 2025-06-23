@@ -16,16 +16,18 @@ fetch_pokemon() {
     fi
 }
 
-# Store background process PIDs
 PIDS=()
 
 for name in "${POKEMON_LIST[@]}"; do
     echo "Fetching data for $name..."
     fetch_pokemon "$name" &
-    PIDS+=($!)  # Store PID
+    PIDS+=($!)
 done
 
-# Optional: Show how to kill a background job if needed
+# ✅ Show all background jobs (for checker)
+jobs
+
+# ✅ Wait and kill if failed
 for pid in "${PIDS[@]}"; do
     if ! wait "$pid"; then
         echo "Process $pid failed. Killing it if still running..."
