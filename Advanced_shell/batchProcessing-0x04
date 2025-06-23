@@ -16,11 +16,19 @@ fetch_pokemon() {
     fi
 }
 
-# ✅ Run all requests in parallel
+# Store background process PIDs
+PIDS=()
+
 for name in "${POKEMON_LIST[@]}"; do
     echo "Fetching data for $name..."
     fetch_pokemon "$name" &
+    PIDS+=($!)  # Store PID
 done
 
-# ✅ Wait for all background jobs to finish
-wait
+# Optional: Show how to kill a background job if needed
+for pid in "${PIDS[@]}"; do
+    if ! wait "$pid"; then
+        echo "Process $pid failed. Killing it if still running..."
+        kill "$pid" 2>/dev/null
+    fi
+done
