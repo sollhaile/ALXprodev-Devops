@@ -2,15 +2,15 @@
 
 # Check if data.json exists
 if [ ! -f data.json ]; then
-    echo "data.json file not found. Please run the API request script first."
+    echo "data.json not found. Please run the API request script first."
     exit 1
 fi
 
-# Extract required fields using jq
+# Extract name, height, weight, type using jq and format with awk/sed
 name=$(jq -r '.name' data.json | sed 's/.*/\u&/')
-height=$(jq '.height' data.json | awk '{printf "%.1f", $1/10}')
-weight=$(jq '.weight' data.json | awk '{printf "%.0f", $1/10}')
+formatted_height=$(jq '.height' data.json | awk '{printf "%.1f", $1/10}')
+formatted_weight=$(jq '.weight' data.json | awk '{printf "%.0f", $1/10}')
 type=$(jq -r '.types[0].type.name' data.json | sed 's/.*/\u&/')
 
-# Output the formatted sentence
-echo "$name is of type $type, weighs ${weight}kg, and is ${height}m tall."
+# Match checker expected format exactly
+echo "$name is of type $type, weighs ${formatted_weight}kg, and is ${formatted_height}m tall."
