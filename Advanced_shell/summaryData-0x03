@@ -1,22 +1,46 @@
 #!/bin/bash
 
-OUTPUT_DIR="pokemon_data"
-CSV_FILE="pokemon_report.csv"
+# Directory containing the JSON files
+DATA_DIR="pokemon_data"
+OUTPUT_FILE="pokemon_report.csv"
 
-# Header
-echo "Name,Height (m),Weight (kg)" > "$CSV_FILE"
+# Check if the directory exists
+if [ ! -d "$DATA_DIR" ]; then
+    echo "❌ Directory $DATA_DIR not found. Please run the batch fetch script first."
+    exit 1
+fi
 
-# Loop through JSON files
-for file in "$OUTPUT_DIR"/*.json; do
-    name=$(jq -r '.name' "$file" | sed 's/.*/\u&/')  # capitalize using sed
-    height=$(jq '.height' "$file")
-    weight=$(jq '.weight' "$file")
+# Start the CSV report
+echo "Name,Height (m),Weight (kg)" > "$OUTPUT_FILE"
 
-    height_m=$(echo "$height" | awk '{ printf "%.1f", $1 / 10 }')
-    weight_kg=$(echo "$weight" | awk '{ printf "%.1f", $1 / 10 }')
-
-    echo "$name,$height_m,$weight_kg" >> "$CSV_FILE"
+# Extract data from each JSON file
+for file in "$DATA_DIR"/*.json; do
+    name=$(jq -r '.name' "$file" | sed 's/.*/\u&/')
+    height=$(jq '.height' "$file" | awk '{printf "%.1f", $1 / 10}')
+    weight=$(jq '.weight' "$file" | awk '{printf "%.1f", $1 / 10}')
+    echo "$name,$height,$weight" >> "$OUTPUT_FILE"
 done
 
-# ✅ Calculate averages using awk
-awk -F, 'NR>1 {h+=$2; w+=$3; c++} END {printf "\nAverage Height: %.2f m\nAverage Weight: %.2f kg\n", h/c, w/c}' "$CSV_FILE"
+# Show report location
+echo "CSV Report generated at: $OUTPUT_FILE"
+echo ""
+
+# Display CSV contents
+cat "$OUTPUT_FILE"
+
+# Calculate and display averages
+awk -F',' '
+    NR > 1 {
+        height_sum += $2
+        weight_sum += $3
+        count++
+    }
+    END {
+        if (count > 0) {
+            avg_height = height_sum / count
+            avg_weight = weight_sum / count
+            printf "\nAverage Height: %.2f m\n", avg_height
+            printf "Average Weight: %.2f kg\n", avg_weight
+        }
+    }
+' "$OUTPUT_FILE"
